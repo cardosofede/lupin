@@ -5,6 +5,82 @@ from telegram.ext import ContextTypes
 from commands.control_commands import SELECT_TASK, main_menu_keyboard
 from commands.plan_commands import CHOOSE_PLAN_TASK, TASK_INFO, BACK_TO_MAIN_MENU, plan_keyboard
 
+import datetime
+
+
+async def process_task_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
+    """Store the provided task info and confirm."""
+    user_input = update.message.text
+
+    # Determine input type and process accordingly
+    if any(symbol in user_input for symbol in ["-", "*", "."]):
+        # Multiple tasks with separators
+        tasks = parse_multiple_tasks(user_input)
+    elif "\n" in user_input:
+        # Single task with full details
+        tasks = [parse_full_task_input(user_input)]
+    else:
+        # Single task name
+        tasks = [create_simple_task(user_input)]
+
+    # Ensure 'tasks' key in user_data is a list
+    if 'tasks' not in context.user_data:
+        context.user_data['tasks'] = []
+
+    context.user_data['tasks'].extend(tasks)
+
+    # Format confirmation message
+    task_list_formatted = "\n".join([f"✅ {task['task']}" for task in tasks])
+    confirmation_message = f"""
+📝 You have successfully added the following task(s):
+
+{task_list_formatted}
+
+"🤔 What would you like to do next?"
+    """
+    await update.message.reply_text(confirmation_message, reply_markup=plan_keyboard)
+    return CHOOSE_PLAN_TASK
+
+
+def parse_multiple_tasks(user_input):
+    """Parse multiple tasks from user input."""
+    task_lines = [line.strip("-*. ") for line in user_input.split('\n') if line.strip("-*. ")]
+    return [create_simple_task(task) for task in task_lines]
+
+
+def parse_full_task_input(user_input):
+    """Parse a single task with full details from user input."""
+    lines = user_input.split('\n')
+    task_details = {
+        "task": lines[0].strip(),
+        "description": lines[1].strip() if len(lines) > 1 else "",
+        "date_created": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "tags": extract_tags(lines[2]) if len(lines) > 2 else [],
+        "date_scheduled": lines[3].strip() if len(lines) > 3 else "",
+        "priority": lines[4].strip() if len(lines) > 4 else "",
+        "is_completed": False,
+    }
+    return task_details
+
+
+def create_simple_task(task_name):
+    """Create a task dictionary from a simple task name."""
+    return {
+        "task": task_name,
+        "description": "",
+        "date_created": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "tags": [],
+        "date_scheduled": "",
+        "priority": "",
+        "is_completed": False,
+    }
+
+
+def extract_tags(tag_line):
+    """Extract tags from a line of text."""
+    return [tag.strip() for tag in tag_line.split(',')]
+
+
 async def plan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """Handle the 'Plan' submenu."""
     reply_text = "Plan menu: Choose an action"
@@ -13,38 +89,56 @@ async def plan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
 
 
 async def add_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
-    """Ask the user for the task they want to add."""
-    await update.message.reply_text("Which task would you like to add?")
+    """Ask the user for the task(s) they want to add."""
+    instructions = """
+🚀 **Add Your Task\(s\)**
+You can add tasks in different formats:
+
+1️⃣ **Single Simple Task**
+   Just type the task name
+   _Example:_
+   `Buy groceries`
+
+2️⃣ **Multiple Simple Tasks**
+   Start each task on a new line with `[\-, *, .]`
+   _Example:_
+        \- Buy groceries
+        \- Call the electrician
+        \- Schedule a meeting
+
+🔍 Choose your format and send your task\(s\)\!
+ """
+    await update.message.reply_text(instructions, parse_mode='MarkdownV2')
     return TASK_INFO
-
-
-async def process_task_info(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
-    """Store the provided task info and confirm."""
-    user_task = update.message.text
-
-    # Ensure there's a 'tasks' key in user_data and it's a list
-    if 'tasks' not in context.user_data:
-        context.user_data['tasks'] = []
-
-    # Add the new task to the 'tasks' list
-    context.user_data['tasks'].append(user_task)
-
-    await update.message.reply_text(f"Task '{user_task}' added successfully. What would you like to do next?",
-                                    reply_markup=plan_keyboard)
-    return CHOOSE_PLAN_TASK
 
 
 async def list_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """List the tasks added so far."""
-    end_message = "What would you like to do next?"
+    end_message = "🤔 What would you like to do next?"
     if 'tasks' not in context.user_data or not context.user_data['tasks']:
-        await update.message.reply_text(f"You haven't added any tasks yet. {end_message}",
+        await update.message.reply_text("You haven't added any tasks yet. " + end_message,
                                         reply_markup=plan_keyboard)
     else:
-        tasks = "\n".join(context.user_data['tasks'])
-        await update.message.reply_text(f"You've added the following tasks:\n{tasks}\n{end_message}",
-                                        reply_markup=plan_keyboard)
+        task_summaries = format_task_summaries(context.user_data['tasks'])
+        message = f"📋 Here are your current tasks:\n\n{task_summaries}\n\n{end_message}"
+        await update.message.reply_text(message, reply_markup=plan_keyboard, parse_mode='MarkdownV2')
     return CHOOSE_PLAN_TASK
+
+
+def format_task_summaries(tasks):
+    """Format task summaries for display."""
+    summaries = []
+    for task in tasks:
+        summary = f"📝 *{task['task']}*"
+        if task.get('description'):
+            summary += f" - _{task['description']}_"
+        if task.get('date_scheduled'):
+            summary += f" 📅 {task['date_scheduled']}"
+        if task.get('priority'):
+            summary += f" 🔺 {task['priority']}"
+        summaries.append(summary)
+    return "\n".join(summaries)
+
 
 
 async def back_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
