@@ -33,3 +33,40 @@ LupinAssistant is a sophisticated Telegram bot designed to streamline task and p
    - **User-Centric Design**: Focus on intuitive and user-friendly interaction.
 
 LupinAssistant is more than just an organizational tool; it's a partner in your journey towards achieving efficiency and effectiveness in your daily tasks and long-term projects.
+
+## Installation
+
+### Prerequisites
+
+- Docker
+- Telegram Bot API Token
+
+### Setup Instructions
+
+1. **Clone the Repository:**
+   ```sh
+   git clone https://github.com/cardosofede/lupin.git
+   cd lupin-assistant
+   ```
+
+2. **Environment Configuration:**
+   - Create a `.env` file in the root directory.
+   - Add your Telegram Bot API Token:
+     ```
+     TELEGRAM_TOKEN=your_telegram_bot_token_here
+     ```
+   - You can also add the telegram bot in the docker-compose.yml     
+
+3. **Docker Build:**
+   - Build the Docker image for LupinAssistant:
+     ```sh
+     docker-compose build
+     ```
+
+4. **Run LupinAssistant:**
+   - Start the bot using Docker:
+     ```sh
+     docker-compose up
+     ```
+
+Now, LupinAssistant should be up and running! You can interact with it via the Telegram interface.
