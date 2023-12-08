@@ -13,12 +13,19 @@ async def schedule_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
     """Display a list of unscheduled tasks for scheduling."""
     unscheduled_tasks = [task for task in context.user_data.get('tasks', []) if not task.get('date_scheduled')]
     if unscheduled_tasks:
-        tasks_list = "\n".join([f"{idx + 1}. {task['task']}" for idx, task in enumerate(unscheduled_tasks)])
-        instructions = "Select a task number to schedule, or type 'all' to schedule each task sequentially."
-        await update.message.reply_text(f"Unscheduled Tasks:\n{tasks_list}\n\n{instructions}")
-        return SCHEDULE_TASK  # Next, handle the user's response in a new function
+        tasks_list = "\n".join([f"🔸 *{idx + 1}\.* {task['task']}" for idx, task in enumerate(unscheduled_tasks)])
+        instructions = """
+📅 *Schedule Your Tasks*\n
+Select a task number to schedule, or type 'all' to schedule each task sequentially\.
+_Example:_ `1` to schedule the first task, `all` to schedule all tasks\.
+
+_Unscheduled Tasks:_
+{}
+        """.format(tasks_list)
+        await update.message.reply_text(instructions, parse_mode='MarkdownV2')
+        return SCHEDULE_TASK
     else:
-        await update.message.reply_text("All tasks are currently scheduled. 📅", reply_markup=plan_keyboard)
+        await update.message.reply_text("👍 All tasks are currently scheduled. 📅", reply_markup=plan_keyboard)
         return CHOOSE_PLAN_TASK
 
 
@@ -69,11 +76,13 @@ def get_later_this_week_date():
     later_this_week = today + datetime.timedelta(days=min(2, days_to_weekend))  # Assuming "later this week" means in the next 2 days or until Sunday
     return later_this_week.strftime("%Y-%m-%d")
 
+
 def get_next_week_date():
     """Calculate a date for next week."""
     today = datetime.datetime.now().date()
     next_week = today + datetime.timedelta(days=7 - today.weekday())  # Start of next week (Monday)
     return next_week.strftime("%Y-%m-%d")
+
 
 def update_task_in_list(tasks, updated_task):
     """Update a task in the tasks list."""
@@ -81,6 +90,7 @@ def update_task_in_list(tasks, updated_task):
         if task['task'] == updated_task['task'] and task['date_created'] == updated_task['date_created']:
             task.update(updated_task)
             break
+
 
 async def handle_custom_date(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """Handle the user's custom date input."""
@@ -132,6 +142,7 @@ async def handle_task_selection(update: Update, context: ContextTypes.DEFAULT_TY
         await update.message.reply_text("Invalid input. Please select a valid task number or type 'all'.")
         return SCHEDULE_TASK
 
+
 async def schedule_next_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """Schedule the next task in the queue."""
     if context.user_data.get('task_queue'):
@@ -150,12 +161,9 @@ async def process_task_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
     user_input = update.message.text
 
     # Determine input type and process accordingly
-    if any(symbol in user_input for symbol in ["-", "*", "."]):
+    if any(symbol in user_input for symbol in ["-", "*", ".", "\n"]):
         # Multiple tasks with separators
         tasks = parse_multiple_tasks(user_input)
-    elif "\n" in user_input:
-        # Single task with full details
-        tasks = [parse_full_task_input(user_input)]
     else:
         # Single task name
         tasks = [create_simple_task(user_input)]
@@ -220,22 +228,20 @@ def extract_tags(tag_line):
 
 async def plan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """Handle the 'Plan' submenu."""
-    reply_text = """
-📝 *Plan Menu*
+    instructions = """
+📝 *Lupin Assistant \- Plan Menu*
 
-In the Plan section, you can:
+🚀 **Add Task:** Type a task name or list multiple tasks, each on a new line\. 
 
-1️⃣ **Add Tasks** 
-   \- Quickly add a single task or multiple tasks\.
-   \- Provide detailed task information including description, tags, and deadlines\.
+🔍 **List Tasks:** View all your tasks, with details on their schedule and status\.
 
-2️⃣ **List Tasks** 
-   \- View all your planned tasks\.
-   \- Get a summary of tasks by date, priority, or tags\.
+📅 **Schedule Tasks:** Assign specific dates to your unscheduled tasks for better organization\.
 
-Choose an action from the menu below to get started\!
+💡 **Brainstorm Ideas:** Jot down and organize your thoughts or ideas related to tasks\.
+
+_Select an option from the menu to proceed\!_
     """
-    await update.message.reply_text(reply_text, reply_markup=plan_keyboard, parse_mode='MarkdownV2')
+    await update.message.reply_text(instructions, parse_mode='MarkdownV2', reply_markup=plan_keyboard)
     return CHOOSE_PLAN_TASK
 
 
@@ -245,17 +251,15 @@ async def add_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
 🚀 **Add Your Task\(s\)**
 You can add tasks in different formats:
 
-1️⃣ **Single Simple Task**
-   Just type the task name
-   _Example:_
-   `Buy groceries`
+1️⃣ **Single Task:** Just type the task name
+_Example:_
+`Buy groceries`
 
-2️⃣ **Multiple Simple Tasks**
-   Start each task on a new line with `[\-, *, .]`
-   _Example:_
-        \- Buy groceries
-        \- Call the electrician
-        \- Schedule a meeting
+2️⃣ **Multiple Tasks:** Start each task on a new line with `\-`, `*`, `.` or a space
+_Example:_
+\- Buy groceries
+\- Call the electrician
+\- Schedule a meeting
 
 🔍 Choose your format and send your task\(s\)\!
  """
