@@ -3,8 +3,8 @@ from telegram.ext import Application, CommandHandler, MessageHandler, PicklePers
 from telegram import Update, ReplyKeyboardRemove
 from telegram.ext import ContextTypes
 
+import datetime
 from conversation_handlers.plan import plan_conversation
-from helpers.utils import facts_to_str
 from config import TOKEN
 from commands.control_commands import SELECT_TASK, END, main_menu_keyboard
 
@@ -15,18 +15,79 @@ logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """Start the conversation and display the main menu."""
-    reply_text = "Hi! My name is Lupin Assistant. I will help you completing your goals!"
-    await update.message.reply_text(reply_text, reply_markup=main_menu_keyboard)
+    reply_text = """
+👋 *Welcome to Lupin Assistant\!*
+I'm here to help you manage your tasks and boost your productivity\.
+
+🔍 *What would you like to do today?* 
+Choose an option from the menu below to get started\.
+    """
+    await update.message.reply_text(reply_text, reply_markup=main_menu_keyboard, parse_mode='MarkdownV2')
     return SELECT_TASK
 
 
 async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """End the conversation and display gathered info."""
-    await update.message.reply_text(
-        f"Thanks for using Lupin Assistant! We have a lot of things to do 🚀{facts_to_str(context.user_data)}Until next time!",
-        reply_markup=ReplyKeyboardRemove()
-    )
+    plan_summary = get_plan_summary(context.user_data.get('tasks', []))
+    do_summary = get_do_summary(context.user_data.get('tasks', []))
+
+    reply_text = f"""
+🚀 *Thanks for using Lupin Assistant\!*
+
+📝 *Plan Summary*:
+\- Tasks created today\: {plan_summary['today']}
+\- Tasks created this week\: {plan_summary['this_week']}
+
+🔧 *Do Summary*:
+\- Incomplete tasks\: {do_summary['incomplete']}
+\- Tasks completed today\: {do_summary['completed_today']}
+\- Tasks completed this week\: {do_summary['completed_this_week']}
+
+Until next time\!
+    """
+    await update.message.reply_text(reply_text, reply_markup=ReplyKeyboardRemove(), parse_mode='MarkdownV2')
     return END
+
+
+
+def get_plan_summary(tasks):
+    """Generate a summary of tasks based on their creation date and completion."""
+    today = datetime.datetime.now().date()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+    summary = {"today": 0, "this_week": 0, "incomplete": 0}
+
+    for task in tasks:
+        date_created = datetime.datetime.strptime(task.get('date_created', '1970-01-01'), "%Y-%m-%d %H:%M:%S").date()
+        if date_created == today:
+            summary['today'] += 1
+        if start_of_week <= date_created <= today:
+            summary['this_week'] += 1
+    return summary
+
+
+def get_do_summary(tasks):
+    today = datetime.datetime.now().date()
+    start_of_week = today - datetime.timedelta(days=today.weekday())
+    do_summary = {"incomplete": 0, "completed_today": 0, "completed_this_week": 0}
+
+    for task in tasks:
+        if not task.get('is_completed', False):
+            do_summary['incomplete'] += 1
+        else:
+            date_completed = datetime.datetime.strptime(task.get('date_completed', '1970-01-01'), "%Y-%m-%d %H:%M:%S").date()
+            if date_completed == today:
+                do_summary['completed_today'] += 1
+            if start_of_week <= date_completed <= today:
+                do_summary['completed_this_week'] += 1
+
+    return do_summary
+
+def get_control_summary(tasks):
+    total_tasks = len(tasks)
+    completed_tasks = sum(1 for task in tasks if task.get('is_completed', False))
+    completion_ratio = (completed_tasks / total_tasks * 100) if total_tasks else 0
+    return {"total": total_tasks, "completion_ratio": round(completion_ratio, 2)}
+
 
 # Main Function
 def main() -> None:
