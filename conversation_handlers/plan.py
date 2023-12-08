@@ -36,29 +36,31 @@ async def process_schedule_option(update: Update, context: ContextTypes.DEFAULT_
     selected_option = update.message.text
     selected_task = context.user_data.get('selected_task')
 
-    if selected_option == "Today":
+    if selected_option == "Stop Scheduling":
+        # Clear the task queue and stop scheduling
+        context.user_data.pop('task_queue', None)
+        await update.message.reply_text("Scheduling stopped. Returning to the main menu.", reply_markup=plan_keyboard)
+        return CHOOSE_PLAN_TASK
+    elif selected_option == "Today":
         selected_task['date_scheduled'] = datetime.datetime.now().strftime("%Y-%m-%d")
     elif selected_option == "Later this week":
         selected_task['date_scheduled'] = get_later_this_week_date()
     elif selected_option == "Next week":
         selected_task['date_scheduled'] = get_next_week_date()
     elif selected_option == "Custom date":
-        # Prompt user to enter a custom date
         await update.message.reply_text("Please enter a date in YYYY-MM-DD format.", reply_markup=ReplyKeyboardRemove())
-        return CUSTOM_DATE  # New state to handle custom date input
+        return CUSTOM_DATE  # State to handle custom date input
     elif selected_option == "Skip":
-        # Skip scheduling this task
         await update.message.reply_text("Task scheduling skipped.", reply_markup=plan_keyboard)
-        return CHOOSE_PLAN_TASK
-        # After scheduling a task, check for more tasks in the queue
+
+    # Update the task in the tasks list and check for more tasks in the queue
+    update_task_in_list(context.user_data["tasks"], selected_task)
     if context.user_data.get('task_queue'):
         return await schedule_next_task(update, context)
 
-    # Update the task in the tasks list
-    update_task_in_list(context.user_data["tasks"], selected_task)
-
     await update.message.reply_text(f"Task '{selected_task['task']}' scheduled for {selected_task['date_scheduled']}.", reply_markup=plan_keyboard)
     return CHOOSE_PLAN_TASK
+
 
 def get_later_this_week_date():
     """Calculate a date later this week."""
