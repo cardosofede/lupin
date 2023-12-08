@@ -83,9 +83,24 @@ def extract_tags(tag_line):
 
 async def plan(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """Handle the 'Plan' submenu."""
-    reply_text = "Plan menu: Choose an action"
-    await update.message.reply_text(reply_text, reply_markup=plan_keyboard)
+    reply_text = """
+📝 *Plan Menu*
+
+In the Plan section, you can:
+
+1️⃣ **Add Tasks** 
+   \- Quickly add a single task or multiple tasks\.
+   \- Provide detailed task information including description, tags, and deadlines\.
+
+2️⃣ **List Tasks** 
+   \- View all your planned tasks\.
+   \- Get a summary of tasks by date, priority, or tags\.
+
+Choose an action from the menu below to get started\!
+    """
+    await update.message.reply_text(reply_text, reply_markup=plan_keyboard, parse_mode='MarkdownV2')
     return CHOOSE_PLAN_TASK
+
 
 
 async def add_task(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
@@ -114,15 +129,52 @@ You can add tasks in different formats:
 
 async def list_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
     """List the tasks added so far."""
-    end_message = "🤔 What would you like to do next?"
     if 'tasks' not in context.user_data or not context.user_data['tasks']:
-        await update.message.reply_text("You haven't added any tasks yet. " + end_message,
+        await update.message.reply_text("You haven't added any tasks yet. 🤔 What would you like to do next?",
                                         reply_markup=plan_keyboard)
     else:
-        task_summaries = format_task_summaries(context.user_data['tasks'])
-        message = f"📋 Here are your current tasks:\n\n{task_summaries}\n\n{end_message}"
+        now = datetime.datetime.now()
+        today = now.date()
+        end_of_week = today + datetime.timedelta(days=6 - today.weekday())
+
+        not_scheduled, scheduled_today, scheduled_week, overdue = categorize_tasks_by_schedule(context.user_data['tasks'], today, end_of_week)
+
+        message = f"""
+📋 *Current Tasks Summary*:
+
+📌 *Not Scheduled:*
+{format_task_summaries(not_scheduled)}
+
+📅 *Scheduled for Today:*
+{format_task_summaries(scheduled_today)}
+
+🗓️ *Scheduled This Week:*
+{format_task_summaries(scheduled_week)}
+
+⏰ *Overdue Tasks:*
+{format_task_summaries(overdue)}
+
+🤔 *What would you like to do next?*
+        """
         await update.message.reply_text(message, reply_markup=plan_keyboard, parse_mode='MarkdownV2')
     return CHOOSE_PLAN_TASK
+
+
+def categorize_tasks_by_schedule(tasks, today, end_of_week):
+    not_scheduled, scheduled_today, scheduled_week, overdue = [], [], [], []
+    for task in tasks:
+        date_scheduled = task.get('date_scheduled')
+        if date_scheduled:
+            date_scheduled = datetime.datetime.strptime(date_scheduled, "%Y-%m-%d").date()
+            if date_scheduled < today:
+                overdue.append(task)
+            elif date_scheduled == today:
+                scheduled_today.append(task)
+            elif today < date_scheduled <= end_of_week:
+                scheduled_week.append(task)
+        else:
+            not_scheduled.append(task)
+    return not_scheduled, scheduled_today, scheduled_week, overdue
 
 
 def format_task_summaries(tasks):
