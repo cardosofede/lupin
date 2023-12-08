@@ -181,13 +181,13 @@ def format_task_summaries(tasks):
     """Format task summaries for display."""
     summaries = []
     for task in tasks:
-        summary = f"📝 *{task['task']}*"
-        if task.get('description'):
-            summary += f" - _{task['description']}_"
-        if task.get('date_scheduled'):
-            summary += f" 📅 {task['date_scheduled']}"
-        if task.get('priority'):
-            summary += f" 🔺 {task['priority']}"
+        summary = f"🔹 *{task['task']}*"
+        # if task.get('description'):
+        #     summary += f" - _{task['description']}_"
+        # if task.get('date_scheduled'):
+        #     summary += f" 📅 {task['date_scheduled']}"
+        # if task.get('priority'):
+        #     summary += f" 🔺 {task['priority']}"
         summaries.append(summary)
     return "\n".join(summaries)
 
@@ -206,7 +206,7 @@ def plan_conversation() -> ConversationHandler:
         states={
             CHOOSE_PLAN_TASK: [MessageHandler(filters.Regex("^Add Task$"), add_task),
                                MessageHandler(filters.Regex("^List Tasks$"), list_tasks)],
-            TASK_INFO: [MessageHandler(filters.TEXT, process_task_info)],
+            TASK_INFO: [MessageHandler(filters.TEXT & ~filters.Regex("^Back$"), process_task_info)],
         },
         fallbacks=[MessageHandler(filters.Regex("^Back$"), back_to_main_menu)],
         map_to_parent={
