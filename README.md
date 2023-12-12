@@ -5,26 +5,20 @@ LupinAssistant is a sophisticated Telegram bot designed to streamline task and p
 ## Key Features
 
 ### 1. **Plan**
-   - **Create New Projects**: Initiate projects with titles, descriptions, and deadlines.
-   - **Add New Tasks**: Detail tasks with scheduling capabilities.
+   - **Add New Tasks**: Quickly add tasks by just entering the task name.
+   - **Schedule Tasks**: Plan tasks with an interactive approach.
+   - **List Tasks**: View tasks with a comprehensive overview.
    - **Brainstorm Ideas**: Facilitate effective idea generation for project development.
 
 ### 2. **Control**
+   - **Task Status Management**: Efficiently manage and update task statuses.
    - **Project Analysis**: Gain insights with comprehensive project metrics.
    - **Summarize Work**: Utilize advanced LLMs for summarizing work progress.
-   - **Edit/Remove Tasks**: Adapt tasks based on feedback and project evolution.
 
 ### 3. **Do**
-   - **Task Execution Assistance**: Leverage LLM-based tools for task assistance.
-   - **Task Status Management**: Efficiently manage and update task statuses.
-   - **Pomodoro Timer**: Enhance time management with a built-in Pomodoro timer.
-   - **Plan the Day**: Receive intelligent suggestions for daily task planning.
-
-### 4. **Stats**
-   - **Performance Overview**: View productivity metrics and performance overviews.
-   - **Productivity Insights**: Analyze activity patterns for productivity enhancement.
-   - **Project Progress Tracking**: Monitor project progression with detailed statistics.
-   - **Task Completion Analysis**: Understand task completion trends for better planning.
+   - **AI-Assisted Task Execution**: Work on tasks with an AI Assistant, getting help to find information and solve tasks until paused or completed.
+   - **Pomodoro Timer**: Use a built-in Pomodoro timer for enhanced time management, with suggestions for meditation, stretching, or leisure activities during breaks..
+   - **Plan the Day**: Receive smart suggestions for daily task planning based on your schedule and recurring commitments..
 
 ### Additional Features
    - **Customizable Interface**: Personalize the user experience.
