@@ -2,11 +2,14 @@ from telegram.ext import ConversationHandler, MessageHandler, filters, CallbackQ
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
-from commands.control_commands import SELECT_TASK, main_menu_keyboard
+from commands.main_commands import SELECT_TASK, main_menu_keyboard
 from commands.plan_commands import CHOOSE_PLAN_TASK, TASK_INFO, SCHEDULE_TASK, BACK_TO_MAIN_MENU, plan_keyboard, \
     CUSTOM_DATE, SCHEDULE_TASK_DATE, schedule_keyboard
 
 import datetime
+
+from conversation_handlers.common_handlers import back_to_main_menu
+from helpers.task_manager import categorize_tasks_by_schedule, format_task_summaries
 
 
 async def schedule_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
@@ -271,12 +274,7 @@ async def list_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
         await update.message.reply_text("You haven't added any tasks yet. 🤔 What would you like to do next?",
                                         reply_markup=plan_keyboard)
     else:
-        now = datetime.datetime.now()
-        today = now.date()
-        end_of_week = today + datetime.timedelta(days=6 - today.weekday())
-
-        not_scheduled, scheduled_today, scheduled_week, overdue = categorize_tasks_by_schedule(context.user_data['tasks'], today, end_of_week)
-
+        not_scheduled, scheduled_today, scheduled_week, overdue = categorize_tasks_by_schedule(context)
         message = f"""
 📋 *Current Tasks Summary*:
 
@@ -296,44 +294,6 @@ async def list_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
         """
         await update.message.reply_text(message, reply_markup=plan_keyboard, parse_mode='MarkdownV2')
     return CHOOSE_PLAN_TASK
-
-
-def categorize_tasks_by_schedule(tasks, today, end_of_week):
-    not_scheduled, scheduled_today, scheduled_week, overdue = [], [], [], []
-    for task in tasks:
-        date_scheduled = task.get('date_scheduled')
-        if date_scheduled:
-            date_scheduled = datetime.datetime.strptime(date_scheduled, "%Y-%m-%d").date()
-            if date_scheduled < today:
-                overdue.append(task)
-            elif date_scheduled == today:
-                scheduled_today.append(task)
-            elif today < date_scheduled <= end_of_week:
-                scheduled_week.append(task)
-        else:
-            not_scheduled.append(task)
-    return not_scheduled, scheduled_today, scheduled_week, overdue
-
-
-def format_task_summaries(tasks):
-    """Format task summaries for display."""
-    summaries = []
-    for task in tasks:
-        summary = f"🔹 *{task['task']}*"
-        # if task.get('description'):
-        #     summary += f" - _{task['description']}_"
-        # if task.get('date_scheduled'):
-        #     summary += f" 📅 {task['date_scheduled']}"
-        # if task.get('priority'):
-        #     summary += f" 🔺 {task['priority']}"
-        summaries.append(summary)
-    return "\n".join(summaries)
-
-
-async def back_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
-    """Transition back to the main menu."""
-    await update.message.reply_text("⏎ Returning to the main menu...", reply_markup=main_menu_keyboard)
-    return BACK_TO_MAIN_MENU
 
 
 def plan_conversation() -> ConversationHandler:
