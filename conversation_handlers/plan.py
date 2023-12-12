@@ -1,10 +1,10 @@
-from telegram.ext import ConversationHandler, MessageHandler, filters
-from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
+from telegram.ext import ConversationHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes
 
 from commands.control_commands import SELECT_TASK, main_menu_keyboard
 from commands.plan_commands import CHOOSE_PLAN_TASK, TASK_INFO, SCHEDULE_TASK, BACK_TO_MAIN_MENU, plan_keyboard, \
-    CUSTOM_DATE, SCHEDULE_TASK_DATE
+    CUSTOM_DATE, SCHEDULE_TASK_DATE, schedule_keyboard
 
 import datetime
 
@@ -29,13 +29,9 @@ _Unscheduled Tasks:_
         return CHOOSE_PLAN_TASK
 
 
-async def show_schedule_options(update: Update):
+async def show_schedule_options(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """Show scheduling options for the selected task."""
-    schedule_keyboard = ReplyKeyboardMarkup(
-        [["Today", "Later this week"], ["Next week", "Custom date"], ["Skip", "Stop Scheduling"]],
-        one_time_keyboard=True
-    )
-    await update.message.reply_text("Choose when to schedule the task or stop scheduling:", reply_markup=schedule_keyboard)
+    await update.message.reply_text(f"Scheduling task: {context.user_data['selected_task']['task']}", reply_markup=schedule_keyboard)
 
 
 async def process_schedule_option(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
@@ -52,21 +48,24 @@ async def process_schedule_option(update: Update, context: ContextTypes.DEFAULT_
         selected_task['date_scheduled'] = datetime.datetime.now().strftime("%Y-%m-%d")
     elif selected_option == "Later this week":
         selected_task['date_scheduled'] = get_later_this_week_date()
+    elif selected_option == "Tomorrow":
+        selected_task['date_scheduled'] = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
     elif selected_option == "Next week":
         selected_task['date_scheduled'] = get_next_week_date()
     elif selected_option == "Custom date":
         await update.message.reply_text("Please enter a date in YYYY-MM-DD format.", reply_markup=ReplyKeyboardRemove())
         return CUSTOM_DATE  # State to handle custom date input
-    elif selected_option == "Skip":
-        await update.message.reply_text("Task scheduling skipped.", reply_markup=plan_keyboard)
 
     # Update the task in the tasks list and check for more tasks in the queue
     update_task_in_list(context.user_data["tasks"], selected_task)
     if context.user_data.get('task_queue'):
         return await schedule_next_task(update, context)
-
-    await update.message.reply_text(f"Task '{selected_task['task']}' scheduled for {selected_task['date_scheduled']}.", reply_markup=plan_keyboard)
-    return CHOOSE_PLAN_TASK
+    elif selected_option == "Skip":
+        await update.message.reply_text("Task scheduling skipped.", reply_markup=plan_keyboard)
+        return CHOOSE_PLAN_TASK
+    else:
+        await update.message.reply_text(f"Task '{selected_task['task']}' scheduled for {selected_task['date_scheduled']}.", reply_markup=plan_keyboard)
+        return CHOOSE_PLAN_TASK
 
 
 def get_later_this_week_date():
@@ -128,7 +127,7 @@ async def handle_task_selection(update: Update, context: ContextTypes.DEFAULT_TY
         selected_task_idx = int(user_input) - 1
         # Store the selected task in context for the next step
         context.user_data['selected_task'] = unscheduled_tasks[selected_task_idx]
-        await show_schedule_options(update)
+        await show_schedule_options(update, context)
         return SCHEDULE_TASK_DATE  # New state to handle scheduling
     elif user_input.lower() == 'all':
         # Start the process of scheduling all tasks sequentially
@@ -148,8 +147,7 @@ async def schedule_next_task(update: Update, context: ContextTypes.DEFAULT_TYPE)
     if context.user_data.get('task_queue'):
         next_task = context.user_data['task_queue'].pop(0)
         context.user_data['selected_task'] = next_task
-        await update.message.reply_text(f"Scheduling task: {next_task['task']}")
-        await show_schedule_options(update)
+        await show_schedule_options(update, context)
         return SCHEDULE_TASK_DATE
     else:
         await update.message.reply_text("All tasks have been scheduled.", reply_markup=plan_keyboard)
@@ -255,11 +253,11 @@ You can add tasks in different formats:
 _Example:_
 `Buy groceries`
 
-2️⃣ **Multiple Tasks:** Start each task on a new line with `\-`, `*`, `.` or a space
+2️⃣ **Multiple Tasks:** Start each task on a new line\. Optional you can start with [`\-`, `*`, `\.`]
 _Example:_
-\- Buy groceries
-\- Call the electrician
-\- Schedule a meeting
+Buy groceries
+Call the electrician
+Schedule a meeting
 
 🔍 Choose your format and send your task\(s\)\!
  """
