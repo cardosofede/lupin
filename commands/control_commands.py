@@ -1,12 +1,12 @@
 from telegram import ReplyKeyboardMarkup
-from telegram.ext import ConversationHandler
 
-# Define command stages
-SELECT_TASK, BACK_TO_MAIN_MENU = map(chr, range(2))
-END = ConversationHandler.END  # Shortcut for ConversationHandler.END
+# Define command stages for the 'Control' conversation
+CHOOSE_CONTROL_TASK, REVIEW_OVERDUE, REVIEW_TODAY, EDIT_TASK, DELETE_TASK, ANALYZE_CONTROL = map(chr, range(6))
 
-# Define keyboards
-main_menu_keyboard = ReplyKeyboardMarkup(
-    [["Plan", "Do"], ["Control", "Settings"], ["Done"]],
+# Define keyboard for the 'Control' conversation
+control_keyboard = ReplyKeyboardMarkup(
+    [["Review Overdue Tasks", "Review Today's Tasks"],
+     ["Edit Tasks", "Analyze & Control"],
+     ["Delete Tasks", "Back"]],
     one_time_keyboard=True
 )
