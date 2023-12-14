@@ -34,3 +34,10 @@ def format_task_summaries(tasks: list[dict]):
         summary = f"{symbol} *{task['task']}*"
         summaries.append(summary)
     return "\n".join(summaries)
+
+
+def add_date_to_history(task, new_date):
+    if 'date_history' not in task:
+        task['date_history'] = [task.get('date_scheduled', '')]
+    task['date_history'].append(new_date)
+    task['date_scheduled'] = new_date
