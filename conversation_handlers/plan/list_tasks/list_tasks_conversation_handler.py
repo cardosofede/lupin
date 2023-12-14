@@ -2,7 +2,7 @@ from telegram.ext import ConversationHandler, MessageHandler, filters
 from telegram import Update
 from telegram.ext import ContextTypes
 from conversation_handlers.plan.plan_keyboards_states import CHOOSE_PLAN_TASK, plan_keyboard
-from models import Task
+from models.task import Task
 
 
 # Function to handle listing tasks
@@ -32,7 +32,7 @@ async def list_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
         await update.message.reply_text(message, reply_markup=plan_keyboard, parse_mode='MarkdownV2')
     return CHOOSE_PLAN_TASK
 
-# List Tasks Conversation Handler
+
 def list_tasks_conversation_handler() -> ConversationHandler:
     return ConversationHandler(
         entry_points=[MessageHandler(filters.Regex("^List Tasks$"), list_tasks)],

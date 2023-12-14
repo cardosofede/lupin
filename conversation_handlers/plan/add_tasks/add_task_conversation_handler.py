@@ -2,7 +2,7 @@ from telegram.ext import ConversationHandler, MessageHandler, filters
 from telegram import Update
 from telegram.ext import ContextTypes
 from conversation_handlers.plan.plan_keyboards_states import CHOOSE_PLAN_TASK, TASK_INFO, plan_keyboard
-from models import Task
+from models.task import Task
 
 
 # Function to start the add task conversation
@@ -44,7 +44,7 @@ async def process_task_info(update: Update, context: ContextTypes.DEFAULT_TYPE) 
 
     # Format confirmation message
     task_list_formatted = "\n".join([f"✅ {task.task}" for task in tasks])  # Accessing the 'task' attribute of Task instances
-    confirmation_message = f"📝 You have successfully added the following task(s):\n{task_list_formatted}"
+    confirmation_message = f"📝 You have successfully added the following task(s):\n\n{task_list_formatted}"
     await update.message.reply_text(confirmation_message, reply_markup=plan_keyboard)
     return CHOOSE_PLAN_TASK
 
