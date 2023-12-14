@@ -9,7 +9,7 @@ from commands.plan_commands import CHOOSE_PLAN_TASK, TASK_INFO, SCHEDULE_TASK, B
 import datetime
 
 from conversation_handlers.common_handlers import back_to_main_menu
-from helpers.task_manager import categorize_tasks_by_schedule, format_task_summaries
+from helpers.task_manager import categorize_tasks_by_schedule, format_task_summaries, add_date_to_history
 
 
 async def schedule_tasks(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
@@ -48,13 +48,13 @@ async def process_schedule_option(update: Update, context: ContextTypes.DEFAULT_
         await update.message.reply_text("Scheduling stopped. Returning to the main menu.", reply_markup=plan_keyboard)
         return CHOOSE_PLAN_TASK
     elif selected_option == "Today":
-        selected_task['date_scheduled'] = datetime.datetime.now().strftime("%Y-%m-%d")
+        add_date_to_history(selected_task, datetime.datetime.now().strftime("%Y-%m-%d"))
     elif selected_option == "Later this week":
-        selected_task['date_scheduled'] = get_later_this_week_date()
+        add_date_to_history(selected_task, get_later_this_week_date())
     elif selected_option == "Tomorrow":
-        selected_task['date_scheduled'] = (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d")
+        add_date_to_history(selected_task, (datetime.datetime.now() + datetime.timedelta(days=1)).strftime("%Y-%m-%d"))
     elif selected_option == "Next week":
-        selected_task['date_scheduled'] = get_next_week_date()
+        add_date_to_history(selected_task, get_next_week_date())
     elif selected_option == "Custom date":
         await update.message.reply_text("Please enter a date in YYYY-MM-DD format.", reply_markup=ReplyKeyboardRemove())
         return CUSTOM_DATE  # State to handle custom date input
@@ -101,7 +101,7 @@ async def handle_custom_date(update: Update, context: ContextTypes.DEFAULT_TYPE)
 
     # Validate and process the custom date
     if is_valid_date(user_input):
-        selected_task['date_scheduled'] = user_input
+        add_date_to_history(selected_task, user_input)
         # Update the task in the tasks list
         update_task_in_list(context.user_data["tasks"], selected_task)
 
