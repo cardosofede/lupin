@@ -1,17 +1,30 @@
 import datetime
+from enum import Enum
 from typing import List
+from uuid import uuid4
 
 from pydantic import BaseModel
 
 
+class TaskStatus(Enum):
+    """Enum to represent the status of a task."""
+    INCOMPLETE = "Incomplete"
+    COMPLETED = "Completed"
+    CANCELED = "Canceled"
+
+
 class Task(BaseModel):
+    """Model to represent a task."""
+    id: int = uuid4()
     task: str
     description: str = ""
-    date_created: datetime.datetime = datetime.datetime.now()
-    tags: list[str] = []
-    date_scheduled: datetime.datetime = None
     priority: str = ""
-    is_completed: bool = False
+    status: TaskStatus = TaskStatus.INCOMPLETE
+    date_created: datetime.datetime = datetime.datetime.now()
+    date_scheduled: datetime.datetime = None
+    date_history: list[datetime.datetime] = []
+    date_completed: datetime.datetime = None
+    tags: list[str] = []
 
     @classmethod
     def create_simple_task(cls, task_name: str):
@@ -46,11 +59,9 @@ class Task(BaseModel):
         """Parse date string to datetime object."""
         return datetime.datetime.strptime(date_str, "%Y-%m-%d") if date_str else None
 
-    def add_date_to_history(self, new_date: str):
+    def add_date_to_history(self, new_date: datetime.datetime):
         """Add a date to the task's scheduling history."""
-        if not self.date_history:
-            self.date_history.append(self.date_scheduled)
-        self.date_scheduled = datetime.datetime.strptime(new_date, "%Y-%m-%d")
+        self.date_scheduled = new_date
         self.date_history.append(self.date_scheduled)
 
     @staticmethod
@@ -58,7 +69,7 @@ class Task(BaseModel):
         """Format task summaries for display."""
         summaries = []
         for task in tasks:
-            symbol = "✅" if task.is_completed else "🟥"
+            symbol = "✅" if task.status == TaskStatus.COMPLETED else "🔸"
             summary = f"{symbol} *{task.task}*"
             summaries.append(summary)
         return "\n".join(summaries)
@@ -74,7 +85,7 @@ class Task(BaseModel):
         for task in tasks:
             if task.date_scheduled:
                 date_scheduled = task.date_scheduled.date()
-                if date_scheduled < today and not task.is_completed:
+                if date_scheduled < today and not task.status == TaskStatus.COMPLETED:
                     overdue.append(task)
                 elif date_scheduled == today:
                     scheduled_today.append(task)
