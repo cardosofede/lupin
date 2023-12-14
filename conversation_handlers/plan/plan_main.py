@@ -5,6 +5,8 @@ from telegram.ext import ContextTypes
 from conversation_handlers.plan.add_tasks.add_task_conversation_handler import add_task_conversation_handler
 from conversation_handlers.plan.list_tasks.list_tasks_conversation_handler import list_tasks_conversation_handler
 from conversation_handlers.plan.plan_keyboards_states import CHOOSE_PLAN_TASK, plan_keyboard
+from conversation_handlers.plan.schedule_tasks.schedule_tasks_conversation_handler import \
+    schedule_tasks_conversation_handler
 from main_keyboards_states import BACK_TO_MAIN_MENU, SELECT_TASK, main_menu_keyboard
 
 
@@ -37,6 +39,7 @@ def plan_conversation() -> ConversationHandler:
         states={
             CHOOSE_PLAN_TASK: [add_task_conversation_handler(),
                                list_tasks_conversation_handler(),
+                               schedule_tasks_conversation_handler(),
                 # MessageHandler(filters.Regex("^List Tasks$"), list_tasks_conversation_handler),
                 # MessageHandler(filters.Regex("^Schedule Tasks$"), schedule_tasks_conversation_handler),
                 # Add more handlers for other functionalities like Brainstorm Ideas, etc.

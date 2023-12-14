@@ -6,9 +6,10 @@ from telegram.ext import ContextTypes
 import datetime
 
 from config import TOKEN
+from conversation_handlers.control.control_main import control_conversation
 from conversation_handlers.plan.plan_main import plan_conversation
 from main_keyboards_states import SELECT_TASK, END, main_menu_keyboard
-
+from models.task import TaskStatus
 
 # Enable logging
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.INFO)
@@ -50,7 +51,6 @@ Until next time\!
     return END
 
 
-
 def get_plan_summary(tasks):
     """Generate a summary of tasks based on their creation date and completion."""
     today = datetime.datetime.now().date()
@@ -58,7 +58,7 @@ def get_plan_summary(tasks):
     summary = {"today": 0, "this_week": 0, "incomplete": 0}
 
     for task in tasks:
-        date_created = datetime.datetime.strptime(task.get('date_created', '1970-01-01'), "%Y-%m-%d %H:%M:%S").date()
+        date_created = task.date_created.date()
         if date_created == today:
             summary['today'] += 1
         if start_of_week <= date_created <= today:
@@ -72,10 +72,10 @@ def get_do_summary(tasks):
     do_summary = {"incomplete": 0, "completed_today": 0, "completed_this_week": 0}
 
     for task in tasks:
-        if not task.get('is_completed', False):
+        if not task.status == TaskStatus.INCOMPLETE:
             do_summary['incomplete'] += 1
         else:
-            date_completed = datetime.datetime.strptime(task.get('date_completed', '1970-01-01'), "%Y-%m-%d %H:%M:%S").date()
+            date_completed = task.date_created.date()
             if date_completed == today:
                 do_summary['completed_today'] += 1
             if start_of_week <= date_completed <= today:
@@ -83,9 +83,10 @@ def get_do_summary(tasks):
 
     return do_summary
 
+
 def get_control_summary(tasks):
     total_tasks = len(tasks)
-    completed_tasks = sum(1 for task in tasks if task.get('is_completed', False))
+    completed_tasks = sum(1 for task in tasks if task.status == TaskStatus.COMPLETED)
     completion_ratio = (completed_tasks / total_tasks * 100) if total_tasks else 0
     return {"total": total_tasks, "completion_ratio": round(completion_ratio, 2)}
 
@@ -100,7 +101,8 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            SELECT_TASK: [plan_conversation()],
+            SELECT_TASK: [plan_conversation(),
+                          control_conversation()],
             # You can add other states for different main menu items as needed
         },
         fallbacks=[MessageHandler(filters.Regex("^Done$"), done)],
