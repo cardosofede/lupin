@@ -1,15 +1,15 @@
 import datetime
 
-from telegram.ext import ConversationHandler, MessageHandler, filters, CallbackQueryHandler
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup
+from telegram.ext import ConversationHandler, MessageHandler, filters
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import ContextTypes
 from commands.control_commands import (
     CHOOSE_CONTROL_TASK, REVIEW_OVERDUE, REVIEW_TODAY, EDIT_TASK, DELETE_TASK, ANALYZE_CONTROL, control_keyboard
 )
-from commands.main_commands import BACK_TO_MAIN_MENU, SELECT_TASK, main_menu_keyboard
+from main_keyboards_states import BACK_TO_MAIN_MENU, SELECT_TASK
 from conversation_handlers.common_handlers import back_to_main_menu
 from conversation_handlers.plan import get_next_week_date
-from helpers.task_manager import categorize_tasks_by_schedule, format_task_summaries, add_date_to_history
+from helpers.task_manager import categorize_tasks_by_schedule, add_date_to_history
 
 
 async def control(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:

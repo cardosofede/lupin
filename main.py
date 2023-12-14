@@ -5,10 +5,9 @@ from telegram.ext import ContextTypes
 
 import datetime
 
-from conversation_handlers.control import control_conversation
-from conversation_handlers.plan import plan_conversation
 from config import TOKEN
-from commands.main_commands import SELECT_TASK, END, main_menu_keyboard
+from conversation_handlers.plan.plan_main import plan_conversation
+from main_keyboards_states import SELECT_TASK, END, main_menu_keyboard
 
 
 # Enable logging
@@ -101,7 +100,7 @@ def main() -> None:
     conv_handler = ConversationHandler(
         entry_points=[CommandHandler("start", start)],
         states={
-            SELECT_TASK: [plan_conversation(), control_conversation()],
+            SELECT_TASK: [plan_conversation()],
             # You can add other states for different main menu items as needed
         },
         fallbacks=[MessageHandler(filters.Regex("^Done$"), done)],
