@@ -91,7 +91,7 @@ async def process_schedule_option(update: Update, context: ContextTypes.DEFAULT_
     elif selected_option == "Next week":
         selected_task.add_date_to_history(get_next_week_date())
     elif selected_option == "Custom date":
-        await update.message.reply_text("📆 Please enter a date in YYYY-MM-DD format.", reply_markup=ReplyKeyboardRemove())
+        await update.message.reply_text("📆 Please enter a date in DD-MM-YYYY format.", reply_markup=ReplyKeyboardRemove())
         return CUSTOM_DATE  # State to handle custom date input
 
     # Update the task in the tasks list and check for more tasks in the queue
@@ -118,11 +118,13 @@ async def handle_custom_date(update: Update, context: ContextTypes.DEFAULT_TYPE)
         date_object = datetime.datetime.strptime(user_input, "%d-%m-%Y")
 
         # Add the date to the task's history and update the task in the list
-        selected_task.add_to_date_history(date_object)
+        selected_task.add_date_to_history(date_object)
         update_task_in_list(context.user_data["tasks"], selected_task)
-
-        await update.message.reply_text(f"Task '{selected_task.task}' scheduled for {date_object}.", reply_markup=plan_keyboard)
-        return CHOOSE_PLAN_TASK
+        if context.user_data.get('task_queue'):
+            return await schedule_next_task(update, context)
+        else:
+            await update.message.reply_text(f"🙏 Thanks for scheduling your tasks! Now it's time to work! 🤓",
+                                            reply_markup=plan_keyboard)
     else:
         await update.message.reply_text("Invalid date format. Please use DD-MM-YYYY format.", reply_markup=plan_keyboard)
         return CUSTOM_DATE

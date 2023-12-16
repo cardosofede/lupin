@@ -37,3 +37,17 @@ def update_task_in_list(tasks_list, updated_task):
         if task.id == updated_task.id and task.task == updated_task.task:
             tasks_list[i] = updated_task
             break
+
+
+def remove_task_from_list(tasks_list, task_to_remove):
+    """
+    Remove a task from the tasks list.
+
+    Args:
+        tasks_list (List[Task]): The list of Task objects.
+        task_to_remove (Task): The Task object to remove.
+    """
+    for i, task in enumerate(tasks_list):
+        if task.id == task_to_remove.id and task.task == task_to_remove.task:
+            tasks_list.pop(i)
+            break
