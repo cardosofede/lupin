@@ -15,12 +15,12 @@ class TaskStatus(Enum):
 
 class Task(BaseModel):
     """Model to represent a task."""
-    id: int = uuid4()
+    id: str
     task: str
     description: str = ""
     priority: str = ""
     status: TaskStatus = TaskStatus.INCOMPLETE
-    date_created: datetime.datetime = datetime.datetime.now()
+    date_created: datetime.datetime
     date_scheduled: datetime.datetime = None
     date_history: list[datetime.datetime] = []
     date_completed: datetime.datetime = None
@@ -29,19 +29,21 @@ class Task(BaseModel):
     @classmethod
     def create_simple_task(cls, task_name: str):
         """Create a task with just a name."""
-        return cls(task=task_name)
+        return cls(id=str(uuid4()), task=task_name, date_created=datetime.datetime.now())
 
     @classmethod
     def create_multiple_tasks(cls, user_input: str):
         """Create multiple tasks from user input."""
         task_lines = [line.strip("-*. ") for line in user_input.split('\n') if line.strip("-*. ")]
-        return [cls(task=line) for line in task_lines]
+        return [cls.create_simple_task(task_name=line) for line in task_lines]
 
     @classmethod
     def create_full_task(cls, user_input: str):
         """Create a full task with details from user input."""
         lines = user_input.split('\n')
         return cls(
+            id=uuid4(),
+            date_created=datetime.datetime.now(),
             task=lines[0].strip(),
             description=lines[1].strip() if len(lines) > 1 else "",
             tags=cls.extract_tags(lines[2]) if len(lines) > 2 else [],
