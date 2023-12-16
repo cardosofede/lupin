@@ -32,6 +32,8 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """End the conversation and display gathered info."""
     plan_summary = get_plan_summary(context.user_data.get('tasks', []))
     do_summary = get_do_summary(context.user_data.get('tasks', []))
+    control_summary = get_control_summary(context.user_data.get('tasks', []))
+    tags_summary = get_tags_summary(context.user_data.get('tasks', []))
 
     reply_text = f"""
 🚀 *Thanks for using Lupin Assistant\!*
@@ -39,11 +41,19 @@ async def done(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 📝 *Plan Summary*:
 \- Tasks created today\: {plan_summary['today']}
 \- Tasks created this week\: {plan_summary['this_week']}
+\- Overdue tasks\: {plan_summary['overdue']}
 
 🔧 *Do Summary*:
 \- Incomplete tasks\: {do_summary['incomplete']}
 \- Tasks completed today\: {do_summary['completed_today']}
 \- Tasks completed this week\: {do_summary['completed_this_week']}
+
+📊 *Control Summary*:
+\- Total tasks\: {control_summary['total']}
+\- Completion ratio\: {control_summary['completion_ratio']}%
+
+🏷️ *Tags Summary*:
+{tags_summary}
 
 Until next time\!
     """
@@ -52,10 +62,10 @@ Until next time\!
 
 
 def get_plan_summary(tasks):
-    """Generate a summary of tasks based on their creation date and completion."""
     today = datetime.datetime.now().date()
     start_of_week = today - datetime.timedelta(days=today.weekday())
-    summary = {"today": 0, "this_week": 0, "incomplete": 0}
+    overdue_date = today - datetime.timedelta(days=1)
+    summary = {"today": 0, "this_week": 0, "overdue": 0}
 
     for task in tasks:
         date_created = task.date_created.date()
@@ -63,6 +73,9 @@ def get_plan_summary(tasks):
             summary['today'] += 1
         if start_of_week <= date_created <= today:
             summary['this_week'] += 1
+        if task.date_scheduled and task.date_scheduled.date() <= overdue_date and task.status != TaskStatus.COMPLETED:
+            summary['overdue'] += 1
+
     return summary
 
 
@@ -72,10 +85,10 @@ def get_do_summary(tasks):
     do_summary = {"incomplete": 0, "completed_today": 0, "completed_this_week": 0}
 
     for task in tasks:
-        if not task.status == TaskStatus.INCOMPLETE:
+        if task.status == TaskStatus.INCOMPLETE:
             do_summary['incomplete'] += 1
-        else:
-            date_completed = task.date_created.date()
+        elif task.date_completed:
+            date_completed = task.date_completed.date()
             if date_completed == today:
                 do_summary['completed_today'] += 1
             if start_of_week <= date_completed <= today:
@@ -88,7 +101,19 @@ def get_control_summary(tasks):
     total_tasks = len(tasks)
     completed_tasks = sum(1 for task in tasks if task.status == TaskStatus.COMPLETED)
     completion_ratio = (completed_tasks / total_tasks * 100) if total_tasks else 0
-    return {"total": total_tasks, "completion_ratio": round(completion_ratio, 2)}
+    return {"total": total_tasks, "completion_ratio": str(round(completion_ratio, 2)).replace(".", "\.")}
+
+
+def get_tags_summary(tasks):
+    tags_count = {}
+    for task in tasks:
+        for tag in task.tags:
+            if tag in tags_count:
+                tags_count[tag] += 1
+            else:
+                tags_count[tag] = 1
+    tags_summary = '\n'.join([f"\- {tag}: {count}" for tag, count in tags_count.items()])
+    return tags_summary if tags_summary else "No tags used\."
 
 
 # Main Function
