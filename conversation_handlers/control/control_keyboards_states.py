@@ -10,13 +10,14 @@ SELECT_OVERDUE_TASK, REVIEW_OVERDUE, REVIEW_TODAY, EDIT_TASK, DELETE_TASK, ANALY
 control_keyboard = ReplyKeyboardMarkup(
     [["Review Overdue Tasks", "Review Today's Tasks"],
      ["Edit Tasks", "Analyze & Control"],
-     ["Delete Tasks", "Back"]],
+     ["Back"]],
     one_time_keyboard=True
 )
 
 # Define keyboard for the 'Review Overdue Tasks' conversation
 review_overdue_keyboard = ReplyKeyboardMarkup(
-    [["Complete", "Reschedule for Tomorrow", "Reschedule for Next Week", "Delete Task"],
+    [["Complete", "Delete Task"],
+     ["Reschedule for Tomorrow", "Reschedule for Next Week"],
      ["Skip", "Stop Review"]],
     one_time_keyboard=True
 )

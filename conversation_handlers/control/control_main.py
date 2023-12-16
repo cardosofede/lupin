@@ -6,6 +6,8 @@ from conversation_handlers.common_handlers import back_to_main_menu
 from conversation_handlers.control.control_keyboards_states import CHOOSE_CONTROL_TASK, control_keyboard
 from conversation_handlers.control.review_overdue_tasks.review_overdue_tasks_conversation_handler import \
     review_overdue_tasks_conversation_handler
+from conversation_handlers.control.review_today_tasks.review_today_tasks_conversation_handler import \
+    review_today_tasks_conversation_handler
 from main_keyboards_states import BACK_TO_MAIN_MENU, SELECT_TASK
 
 
@@ -36,6 +38,7 @@ def control_conversation() -> ConversationHandler:
         states={
             CHOOSE_CONTROL_TASK: [
                 review_overdue_tasks_conversation_handler(),
+                review_today_tasks_conversation_handler(),
             ],
         },
         fallbacks=[MessageHandler(filters.Regex("^Back$"), back_to_main_menu)],
