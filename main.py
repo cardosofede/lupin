@@ -8,7 +8,7 @@ import datetime
 from config import TOKEN
 from conversation_handlers.control.control_main import control_conversation
 from conversation_handlers.plan.plan_main import plan_conversation
-from main_keyboards_states import SELECT_TASK, END, main_menu_keyboard
+from main_keyboards_states import SELECT_TASK, END, main_menu_keyboard, BACK_TO_MAIN_MENU
 from models.task import TaskStatus
 
 # Enable logging
