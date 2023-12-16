@@ -49,7 +49,7 @@ LupinAssistant is more than just an organizational tool; it's a partner in your 
      ```
      TELEGRAM_TOKEN=your_telegram_bot_token_here
      ```
-   - You can also add the telegram bot in the docker-compose.yml     
+   - You can also add the telegram bot in the docker-compose.yml
 
 3. **Docker Build:**
    - Build the Docker image for LupinAssistant:

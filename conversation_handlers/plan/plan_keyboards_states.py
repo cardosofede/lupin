@@ -12,10 +12,10 @@ SCHEDULE_TASK, SCHEDULE_TASK_DATE, CUSTOM_DATE = map(chr, range(5, 8))
 # Define keyboards for the 'Plan' conversation
 plan_keyboard = ReplyKeyboardMarkup(
     [["Add Task", "List Tasks"], ["Schedule Tasks", "Brainstorm Ideas"], ["Back"]],
-    one_time_keyboard=True
+    one_time_keyboard=True,
 )
 
 schedule_keyboard = ReplyKeyboardMarkup(
-        [["Today", "Tomorrow"], ["Next week", "Custom date"], ["Skip", "Stop Scheduling"]],
-        one_time_keyboard=True
+    [["Today", "Tomorrow"], ["Next week", "Custom date"], ["Skip", "Stop Scheduling"]],
+    one_time_keyboard=True,
 )
