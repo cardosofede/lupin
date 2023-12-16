@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 def facts_to_str(user_data: Dict[str, str]) -> str:
     """Format the gathered user info."""
     facts = [f"{key} - {value}" for key, value in user_data.items()]

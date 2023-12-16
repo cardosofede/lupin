@@ -8,6 +8,7 @@ from pydantic import BaseModel
 
 class TaskStatus(Enum):
     """Enum to represent the status of a task."""
+
     INCOMPLETE = "Incomplete"
     COMPLETED = "Completed"
     CANCELED = "Canceled"
@@ -15,6 +16,7 @@ class TaskStatus(Enum):
 
 class Task(BaseModel):
     """Model to represent a task."""
+
     id: str
     task: str
     description: str = ""
@@ -29,18 +31,22 @@ class Task(BaseModel):
     @classmethod
     def create_simple_task(cls, task_name: str):
         """Create a task with just a name."""
-        return cls(id=str(uuid4()), task=task_name, date_created=datetime.datetime.now())
+        return cls(
+            id=str(uuid4()), task=task_name, date_created=datetime.datetime.now()
+        )
 
     @classmethod
     def create_multiple_tasks(cls, user_input: str):
         """Create multiple tasks from user input."""
-        task_lines = [line.strip("-*. ") for line in user_input.split('\n') if line.strip("-*. ")]
+        task_lines = [
+            line.strip("-*. ") for line in user_input.split("\n") if line.strip("-*. ")
+        ]
         return [cls.create_simple_task(task_name=line) for line in task_lines]
 
     @classmethod
     def create_full_task(cls, user_input: str):
         """Create a full task with details from user input."""
-        lines = user_input.split('\n')
+        lines = user_input.split("\n")
         return cls(
             id=uuid4(),
             date_created=datetime.datetime.now(),
@@ -54,7 +60,7 @@ class Task(BaseModel):
     @staticmethod
     def extract_tags(tag_line: str):
         """Extract tags from a line of text."""
-        return [tag.strip() for tag in tag_line.split(',')]
+        return [tag.strip() for tag in tag_line.split(",")]
 
     @staticmethod
     def parse_date(date_str: str):
@@ -67,7 +73,7 @@ class Task(BaseModel):
         self.date_history.append(self.date_scheduled)
 
     @staticmethod
-    def format_task_summaries(tasks: List['Task']):
+    def format_task_summaries(tasks: List["Task"]):
         """Format task summaries for display."""
         summaries = []
         for task in tasks:
@@ -77,7 +83,7 @@ class Task(BaseModel):
         return "\n".join(summaries)
 
     @classmethod
-    def categorize_tasks_by_schedule(cls, tasks: List['Task']):
+    def categorize_tasks_by_schedule(cls, tasks: List["Task"]):
         """Categorize tasks by their scheduled date."""
         now = datetime.datetime.now()
         today = now.date()

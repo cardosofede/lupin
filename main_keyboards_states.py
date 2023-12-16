@@ -7,6 +7,5 @@ END = ConversationHandler.END  # Shortcut for ConversationHandler.END
 
 # Define keyboards
 main_menu_keyboard = ReplyKeyboardMarkup(
-    [["Plan", "Do"], ["Control", "Settings"], ["Done"]],
-    one_time_keyboard=True
+    [["Plan", "Do"], ["Control", "Settings"], ["Done"]], one_time_keyboard=True
 )

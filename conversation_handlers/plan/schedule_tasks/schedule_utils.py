@@ -5,14 +5,18 @@ def get_later_this_week_date():
     """Calculate a date later this week."""
     today = datetime.datetime.now()
     days_to_weekend = 6 - today.weekday()  # Days until Sunday
-    later_this_week = today + datetime.timedelta(days=min(2, days_to_weekend))  # Assuming "later this week" means in the next 2 days or until Sunday
+    later_this_week = today + datetime.timedelta(
+        days=min(2, days_to_weekend)
+    )  # Assuming "later this week" means in the next 2 days or until Sunday
     return later_this_week
 
 
 def get_next_week_date():
     """Calculate a date for next week."""
     today = datetime.datetime.now()
-    next_week = today + datetime.timedelta(days=7 - today.weekday())  # Start of next week (Monday)
+    next_week = today + datetime.timedelta(
+        days=7 - today.weekday()
+    )  # Start of next week (Monday)
     return next_week
 
 
