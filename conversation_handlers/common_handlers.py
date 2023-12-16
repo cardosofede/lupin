@@ -1,7 +1,7 @@
 from telegram import Update
 from telegram.ext import ContextTypes
 
-from commands.main_commands import main_menu_keyboard, BACK_TO_MAIN_MENU
+from main_keyboards_states import BACK_TO_MAIN_MENU, main_menu_keyboard
 
 
 async def back_to_main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE) -> str:
