@@ -28,6 +28,7 @@ async def handle_overdue_task_action(
     # Process the action on the current task
     if action == "Complete":
         current_task.status = TaskStatus.COMPLETED
+        current_task.date_completed = datetime.datetime.now()
         await update.message.reply_text(
             f"✅ Task '{current_task.task}' marked as complete."
         )
