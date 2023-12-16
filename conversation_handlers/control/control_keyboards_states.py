@@ -1,14 +1,22 @@
 from telegram import ReplyKeyboardMarkup
 
+# TODO: Evaluate to manage the states with Enums
 # Define command stages for the 'Control' conversation
 CHOOSE_CONTROL_TASK = map(chr, range(1))
 
-REVIEW_OVERDUE, REVIEW_TODAY, EDIT_TASK, DELETE_TASK, ANALYZE_CONTROL = map(chr, range(5))
+SELECT_OVERDUE_TASK, REVIEW_OVERDUE, REVIEW_TODAY, EDIT_TASK, DELETE_TASK, ANALYZE_CONTROL = map(chr, range(2, 8))
 
 # Define keyboard for the 'Control' conversation
 control_keyboard = ReplyKeyboardMarkup(
     [["Review Overdue Tasks", "Review Today's Tasks"],
      ["Edit Tasks", "Analyze & Control"],
      ["Delete Tasks", "Back"]],
+    one_time_keyboard=True
+)
+
+# Define keyboard for the 'Review Overdue Tasks' conversation
+review_overdue_keyboard = ReplyKeyboardMarkup(
+    [["Complete", "Reschedule for Tomorrow", "Reschedule for Next Week", "Delete Task"],
+     ["Skip", "Stop Review"]],
     one_time_keyboard=True
 )
