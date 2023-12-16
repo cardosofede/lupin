@@ -104,7 +104,7 @@ def get_do_summary(tasks):
     for task in tasks:
         if task.status == TaskStatus.INCOMPLETE:
             do_summary["incomplete"] += 1
-        elif task.date_completed:
+        elif task.status == TaskStatus.COMPLETED:
             date_completed = task.date_completed.date()
             if date_completed == today:
                 do_summary["completed_today"] += 1

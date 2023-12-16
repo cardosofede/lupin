@@ -7,11 +7,12 @@ CHOOSE_CONTROL_TASK = map(chr, range(1))
 (
     SELECT_OVERDUE_TASK,
     REVIEW_OVERDUE,
+    SELECT_TODAY_TASK,
     REVIEW_TODAY,
     EDIT_TASK,
     DELETE_TASK,
     ANALYZE_CONTROL,
-) = map(chr, range(2, 8))
+) = map(chr, range(2, 9))
 
 # Define keyboard for the 'Control' conversation
 control_keyboard = ReplyKeyboardMarkup(

@@ -6,8 +6,8 @@ from telegram.ext import ContextTypes, ConversationHandler, MessageHandler, filt
 from conversation_handlers.common_handlers import back_to_main_menu
 from conversation_handlers.control.control_keyboards_states import (
     CHOOSE_CONTROL_TASK,
-    REVIEW_OVERDUE,
-    SELECT_OVERDUE_TASK,
+    REVIEW_TODAY,
+    SELECT_TODAY_TASK,
     control_keyboard,
     review_overdue_keyboard,
 )
@@ -29,18 +29,21 @@ async def handle_scheduled_today_task_action(
     # TODO: Abstract this behaviour since it's duplicated in review_overdue_tasks_conversation_handler.py
     if action == "Complete":
         current_task.status = TaskStatus.COMPLETED
+        current_task.date_completed = datetime.datetime.now()
         await update.message.reply_text(
             f"✅ Task '{current_task.task}' marked as complete."
         )
     elif action == "Reschedule for Tomorrow":
         tomorrow_date = datetime.datetime.now() + datetime.timedelta(days=1)
         current_task.add_date_to_history(tomorrow_date)
+        current_task.status = TaskStatus.INCOMPLETE
         await update.message.reply_text(
             f"🗓️ Task '{current_task.task}' rescheduled for tomorrow."
         )
     elif action == "Reschedule for Next Week":
         next_week_date = get_next_week_date()
         current_task.add_date_to_history(next_week_date)
+        current_task.status = TaskStatus.INCOMPLETE
         await update.message.reply_text(
             f"📅 Task '{current_task.task}' rescheduled for next week."
         )
@@ -74,8 +77,8 @@ async def handle_scheduled_today_task_action(
 async def present_scheduled_today_task(
     update, context: ContextTypes.DEFAULT_TYPE
 ) -> str:
-    today_tasks = context.user_data.get("today_tasks")
-    if not today_tasks:
+    scheduled_today = context.user_data.get("scheduled_today")
+    if not scheduled_today:
         await update.message.reply_text(
             "🎉 No more today tasks!", reply_markup=control_keyboard
         )
@@ -83,7 +86,10 @@ async def present_scheduled_today_task(
 
     # Present a list of today tasks
     tasks_list = "\n".join(
-        [f"🏁 *{idx + 1}\.* {task.task}" for idx, task in enumerate(today_tasks)]
+        [
+            f"{'🔻' if task.status == TaskStatus.INCOMPLETE else '✅'} *{idx + 1}\.* {task.task}"
+            for idx, task in enumerate(scheduled_today)
+        ]
     )
     instructions = """
 🔔 *Review Today's Tasks*\n
@@ -96,7 +102,7 @@ _Today's Tasks:_
         tasks_list
     )
     await update.message.reply_text(instructions, parse_mode="MarkdownV2")
-    return SELECT_OVERDUE_TASK
+    return SELECT_TODAY_TASK
 
 
 async def review_scheduled_today_tasks(
@@ -108,7 +114,7 @@ async def review_scheduled_today_tasks(
     )
     if scheduled_today:
         context.user_data[
-            "today_tasks"
+            "scheduled_today"
         ] = scheduled_today.copy()  # Store overdue tasks in context
         return await present_scheduled_today_task(update, context)
     else:
@@ -141,7 +147,7 @@ async def handle_task_selection(
         await update.message.reply_text(
             "‼️ Invalid input. Please select a valid task number or type 'all'."
         )
-        return SELECT_OVERDUE_TASK
+        return SELECT_TODAY_TASK
 
 
 async def show_task_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -157,9 +163,9 @@ async def show_task_actions(update: Update, context: ContextTypes.DEFAULT_TYPE):
         task = task_queue.pop(0)
         context.user_data["selected_scheduled_today_task"] = task
         await update.message.reply_text(
-            f"🗓️ Scheduling task: {task.task}", reply_markup=review_overdue_keyboard
+            f"🗓️ Control task: {task.task}", reply_markup=review_overdue_keyboard
         )
-        return REVIEW_OVERDUE
+        return REVIEW_TODAY
 
 
 def review_today_tasks_conversation_handler() -> ConversationHandler:
@@ -170,8 +176,8 @@ def review_today_tasks_conversation_handler() -> ConversationHandler:
             )
         ],
         states={
-            SELECT_OVERDUE_TASK: [MessageHandler(filters.TEXT, handle_task_selection)],
-            REVIEW_OVERDUE: [
+            SELECT_TODAY_TASK: [MessageHandler(filters.TEXT, handle_task_selection)],
+            REVIEW_TODAY: [
                 MessageHandler(filters.TEXT, handle_scheduled_today_task_action)
             ],
         },
