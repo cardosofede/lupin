@@ -1,9 +1,0 @@
-version: '3.8'
-services:
-  lupin_assistant:
-    build: .
-    environment:
-      - TELEGRAM_TOKEN=your_telegram_token
-    volumes:
-      - .:/usr/src/app
-      - ./data:/data
